@@ -3,17 +3,33 @@ import skimage
 from nd2reader import ND2Reader
 import pandas as pd
 import scipy.signal as signal
+from joblib import Parallel, delayed
+
 class imaging(object):
     def __init__(self):
         pass
+    
+    def append_roi_areas(self, region_index):
+        self.areas[0, region_index] = self.regions[region_index].area
+        pass
+    
+    def append_modified_frames(self, image_index):
+        self.frames[:, :, image_index] *= self.roi_mask
+        pass
+    
+    def compute_intensities(self, frame_index):
+        frame_regions = skimage.measure.regionprops(self.labels, intensity_image=self.frames[:, :, frame_index])
+        for r in range(0, len(frame_regions)):
+            self.intensities[frame_index, r] = frame_regions[r].mean_intensity
+        pass
+        
 
     def rois(self, filename):
-        self.roi_mask = skimage.data.imread(filename)
+        self.roi_mask = skimage.img_as_bool(skimage.data.imread(filename))
         self.labels = skimage.measure.label(self.roi_mask)
         self.regions = skimage.measure.regionprops(self.labels)
         self.areas = np.zeros((1, len(self.regions)))
-        for r in range(0, len(self.regions)):
-            self.areas[0, r] = self.regions[r].area
+        Parallel(n_jobs=-2, require='sharedmem')(delayed(self.append_roi_areas)(region_index=r) for r in range(0, len(self.regions)))
         return self.regions
 
     def video(self, filename):
@@ -22,17 +38,16 @@ class imaging(object):
         images = ND2Reader(filename)
         self.intensities = np.zeros((len(images), len(self.regions)))
         self.time = np.reshape((images.timesteps - images.timesteps[0]), [1, len(images)])
-        for image in images:
-            self.frames.append(image*self.roi_mask)
+        rows, cols = images[0].shape
+        nframes = len(images)
         images.close()
+        self.frames = np.zeros((rows, cols, nframes), dtype=np.uint8)
+        Parallel(n_jobs=-2, require='sharedmem')(delayed(self.append_modified_frames)(image_index=i) for i in range(0, nframes))
         return self.frames
 
     def responses(self):
-        for f in range(0, len(self.frames)):
-            frame_regions = skimage.measure.regionprops(self.labels, intensity_image=self.frames[f])
-            for r in range(0, len(frame_regions)):
-                self.intensities[f, r] = frame_regions[r].mean_intensity
-        return self.intensities
+        Parallel(n_jobs=-2, require='sharedmem')(delayed(self.compute_intensities)(frame_index=i) for i in range(0, self.frames.shape[2]))
+        pass
     
     def filter(self, cut_off, order):
         nyq_rate = self.sampling_rate/2
