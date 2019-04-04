@@ -1,47 +1,26 @@
-from experiment.imaging import imaging
-from sklearn.cluster import KMeans
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Mar 26 21:45:02 2019
+
+@author: rishialluri
+"""
+
+from imaging.reader import reader
 from matplotlib import pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
-
-
-# ... do stuff
-
-roi_file = "data/roi.1024.tif"
-video_file = "data/video_3007.nd2"
-
 import time
 
+rdr = reader()
+
+video_file = "Z:/Halen/Ephyz/190322.m.40.m3.p1/video_1001.nd2"
+roi_file = "Z:/Halen/Ephyz/190322.m.40.m3.p1/roi1024.tif"
+
 start_time = time.time()
-img = imaging()
-img.rois(roi_file)
-img.video(video_file)
+rdr.read(imaging_file=video_file, roi_file=roi_file)
+print("--- Reading: %s seconds ---" % (time.time() - start_time))
+start_time = time.time()
+rdr.correct_intensities(parallel=True)
+print("--- Correcting: %s seconds ---" % (time.time() - start_time))
 
-data = img._to_DataFrame(normalize=False)
-
-parameters = {}
-parameters["threshold"] = 0.93
-img.categorize("correlation", parameters, True)
-cat = img.categories
-
-_, valid_groups = np.where(cat != np.inf)
-
-end_time = time.time()
-print("Elapsed time was %g seconds" % (end_time - start_time))
-
-figure1 = plt.figure()
-axes1 = figure1.add_subplot(111, projection='3d')
-axes1.scatter(data.columns, img.categories, img.areas)
-axes1.set_xlabel("Cells")
-axes1.set_ylabel("Type")
-axes1.set_zlabel("Pixels")
-
-
-figure2 = plt.figure()
-axes2 = figure2.add_subplot(111)
-cell_type = 7
-_, cells = np.where(cat == cell_type)
-for cell in cells:
-    axes2.plot(img.time[0, :], data[cell])
-    
     
