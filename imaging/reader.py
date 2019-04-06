@@ -46,17 +46,21 @@ class reader(object):
         self.ypixels, self.xpixels = images.frame_shape
         self.rate = images.frame_rate
         self.nframes = images.sizes['t']
-        if not end_time:
-            end_frame = self.nframes
-        else:
+        if end_time:
             self.set_end_time(end_time)
             end_frame = np.floor(self.rate*self.end_time)
-        if not start_time:
-            start_frame = 0
         else:
+            end_frame = self.nframes
+            self.end_time = np.floor(end_frame/self.rate)
+            
+        if start_time:
             self.set_start_time(start_time)
             start_frame = np.floor(self.rate*self.start_time)
+        else:
+            start_frame = 0
+            self.start_time = np.floor(start_frame/self.rate)
         self.intensities = np.zeros((self.nregions, end_frame-start_frame), dtype=np.float32)
+        self.time = np.linspace(self.start_time, self.end_time, end_frame-start_frame)
         for frame_index in range(start_frame, end_frame):
             frame_340 = images.get_frame_2D(t=frame_index, c=0)*self.mask
             frame_380 = images.get_frame_2D(t=frame_index, c=1)*self.mask
@@ -64,7 +68,7 @@ class reader(object):
             regions = measure.regionprops(label_image=self.labels, intensity_image=ratio)
             for region_index in range(self.nregions):
                 self.intensities[region_index, frame_index-start_frame] = regions[region_index].mean_intensity
-            self.progress = ((frame_index-start_frame)/(end_frame-start_frame))*100
+            self.progress = np.round(((frame_index-start_frame)/(end_frame-start_frame))*100, 2)
             print(str(self.progress),"%")
         images.close()
         pass
@@ -94,7 +98,7 @@ class reader(object):
             current_ratio = np.where(frame_380 == 0, 0, frame_340/380)
             self.differential += current_ratio - past_ratio
             past_ratio = current_ratio
-            self.progress = (frame_index/self.nframes)*100
+            self.progress = np.round((frame_index/self.nframes)*100, 2)
         images.close()
         return self.differential*self.rate
 
@@ -102,9 +106,9 @@ class reader(object):
         self.corrected_intensities = self.intensities*0
         if not parallel:
             for region_index in range(self.nregions):
-                drift_removed = sig_proc.remove_drift(intensity=self.intensities[region_index, :], lam=10**7, p=0.01, iterations=50)
-                self.corrected_intensities[region_index, :] = sig_proc.filter_intensity(intensity=drift_removed, rate=self.rate, cutoff=0.1, order=3)
-                self.progress = (region_index/self.nregions)*100
+                drift_removed = sig_proc.remove_region_drift(intensity=self.intensities[region_index, :], lam=10**7, p=0.01, iterations=50)
+                self.corrected_intensities[region_index, :] = sig_proc.filter_region_intensity(intensity=drift_removed, rate=self.rate, cutoff=0.1, order=3)
+                self.progress = np.round((region_index/self.nregions)*100, 2)
                 print(str(self.progress),"%")
         else:
             self.index_count = 0
@@ -112,9 +116,14 @@ class reader(object):
         pass
 
     def correct_region_intensity(self, region_index):
-        drift_removed = sig_proc.remove_drift(intensity=self.intensities[region_index, :], lam=10**7, p=0.01, iterations=50)
-        self.corrected_intensities[region_index, :] = sig_proc.filter_intensity(intensity=drift_removed, rate=self.rate, cutoff=0.1, order=3)
+        drift_removed = sig_proc.remove_region_drift(intensity=self.intensities[region_index, :], lam=10**7, p=0.01, iterations=50)
+        self.corrected_intensities[region_index, :] = sig_proc.filter_region_intensity(intensity=drift_removed, rate=self.rate, cutoff=0.1, order=3)
         self.index_count += 1
-        self.progress = (self.index_count/self.nregions)*100
+        self.progress = np.round((self.index_count/self.nregions)*100, 2)
         print(str(self.progress),"%")
         pass
+    
+    def extract_cell_type(self, number):
+        self.correlation = np.corrcoef(self.corrected_intensities)
+        pass
+    

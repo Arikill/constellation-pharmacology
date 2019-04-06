@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="text/javascript" src="../static/js/jQuery.js"></script>
+    <script type="text/javascript" src="../static/js/plotly.js"></script>
+    <link rel="stylesheet" href="../static/css/materialize.min.css">
+    <link rel="stylesheet" href="../static/css/board.css">
+</head>
+
+<body class="blue lighten-5">
+    <nav>
+        <div class="nav-wrapper blue darken-3">
+            <a href="#" class="brand-logo center">Project Venus</a>
+            <ul id="nav-mobile" class="right hide-on-med-and-down">
+                <li><a href="#">Screening</a></li>
+                <li><a href="#">Simultaneous</a></li>
+                <li><a href="#">Settings</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="content">
+        <div class="row">
+            <div class="card col s12 m4 grey lighten-3 z-depth-1">
+                <div class="card-content">
+                    <div class="card-title">Inputs
+                        <form action="#">
+                            <div class="file-field input-field">
+                                <div class="btn red">
+                                    <span>ROI</span>
+                                    <input type="file">
+                                </div>
+                                <div class="file-path-wrapper">
+                                    <input class="file-path validate" type="text" id="roi-file">
+                                </div>
+                            </div>
+                            <div class="file-field input-field">
+                                <div class="btn">
+                                    <span>Video</span>
+                                    <input type="file">
+                                </div>
+                                <div class="file-path-wrapper">
+                                    <input class="file-path validate" type="text" id="video-file">
+                                </div>
+                            </div>
+                            <div class="file-field input-field">
+                                <div class="btn purple lighten-2">
+                                    <span>Protocol</span>
+                                    <input type="file">
+                                </div>
+                                <div class="file-path-wrapper">
+                                    <input class="file-path validate" type="text" id="protocol-file">
+                                </div>
+                            </div>
+                            <div class="input-field" id="data-type-div">
+                                <select id="data-type">
+                                    <option value="" disabled selected>Choose data type</option>
+                                    <option value="bpund">Bound(340)</option>
+                                    <option value="unbound">Unbound(380)</option>
+                                    <option value="ratio">Ratio (340/380)</option>
+                                </select>
+                                <label class="black-text">Fura 2 data:</label>
+                            </div>
+                            <p>
+                                <label>
+                                    <input type="checkbox" checked="checked" />
+                                    <span class="black-text">Correct Baseline</span>
+                                </label>
+                            </p>
+                            <div class="btn-group row">
+                                <a class="waves-effect waves-light btn-large green left">Extract</a>
+                                <a class="waves-effect waves-light btn-large lime darken-4 right">Cluster</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="card col s12 m7 grey lighten-3 z-depth-1">
+                <div class="card-content">
+                    <div class="card-title">Outputs
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script type="text/javascript" src="../static/js/materialize.min.js"></script>
+<script type="text/javascript" src="../static/js/board.js"></script>
+
+</html>

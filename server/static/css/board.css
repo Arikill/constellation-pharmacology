@@ -1,0 +1,18 @@
+.content {
+    margin: auto;
+    margin-left: 2rem;
+    margin-right: 2rem;
+}
+
+.card {
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+
+#data-type-div {
+    margin-top: 2rem;
+}
+
+.btn-group {
+    margin-top: 2rem;
+}
